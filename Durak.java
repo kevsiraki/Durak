@@ -3,6 +3,7 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 class Durak {
     static void begin() {
+   
         Cards AI_playedCard;
         Cards playerPlayedCard;
         Cards playerCard;
@@ -33,9 +34,9 @@ class Durak {
         Cards[] deckAfterInitialDeal = newDeckInitial.toArray(new Cards[newDeckInitial.size()]);
         System.out.println("\nThe remaining cards in the deck are: " + deckAfterInitialDeal.length + "\n");
         for (int i = 0; i < deckAfterInitialDeal.length; i++) System.out.println(deckAfterInitialDeal[i].getValue() + " of " + deckAfterInitialDeal[i].getSuit());
+        trumpCard = determineTrumpCard(newDeckInitial);
+        trumpCardValue = determineTrumpCardValue(newDeckInitial);
         while (newPlayerDeckInitial.isEmpty() != true && newAIDeckInitial.isEmpty() != true) {
-            trumpCard = determineTrumpCard(newDeckInitial);
-            trumpCardValue = determineTrumpCardValue(newDeckInitial);
             if (newDeckInitial.isEmpty() != true) {
                 if (newPlayerDeckInitial.size() < 6) {
                     playerDrawnCard = draw(deck, newDeckInitial);
