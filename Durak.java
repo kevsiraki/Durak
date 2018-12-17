@@ -10,12 +10,14 @@ class Durak {
         Cards AI_drawnCard;
         Cards playerDrawnCard;
         Cards[] deck = Cards.makeDeck();
+        shuffleArray(deck);
         Cards[] playerDeck = deal(deck);
         Cards[] AI_Deck = dealAI(deck);
         boolean checkPlay;
         boolean playerTurn = false;
         int countInvalidPlays = 0;
-        shuffleArray(deck);
+        String trumpCard = " ";
+        int trumpCardValue = 0;
         System.out.println("Your starting deck: " + playerDeck.length + "\n");
         for (int i = 0; i < 6; i++) System.out.println(playerDeck[i].getValue() + " of " + playerDeck[i].getSuit());
         System.out.println("\nAI starting deck: " + AI_Deck.length + "\n");
@@ -32,6 +34,8 @@ class Durak {
         System.out.println("\nThe remaining cards in the deck are: " + deckAfterInitialDeal.length + "\n");
         for (int i = 0; i < deckAfterInitialDeal.length; i++) System.out.println(deckAfterInitialDeal[i].getValue() + " of " + deckAfterInitialDeal[i].getSuit());
         while (newPlayerDeckInitial.isEmpty() != true && newAIDeckInitial.isEmpty() != true) {
+            trumpCard = determineTrumpCard(newDeckInitial);
+            trumpCardValue = determineTrumpCardValue(newDeckInitial);
             if (newDeckInitial.isEmpty() != true) {
                 if (newPlayerDeckInitial.size() < 6) {
                     playerDrawnCard = draw(deck, newDeckInitial);
@@ -45,12 +49,13 @@ class Durak {
                 }
             }
             while (playerTurn == true) {
+                System.out.println("\nTrump card is: "+trumpCardValue+" of " + trumpCard + ".\n");
                 playerCard = playerPlay();
                 Cards[] playerDeckAfterPlay = newPlayerDeckInitial.toArray(new Cards[newPlayerDeckInitial.size()]);
                 for (int i = 0; i < playerDeckAfterPlay.length; i++)
                     if (playerCard.getValue() == playerDeckAfterPlay[i].getValue() && playerCard.getSuit().equals(playerDeckAfterPlay[i].getSuit())) newPlayerDeckInitial.remove(playerDeckAfterPlay[i]);
                 newPlayerDeckInitial.remove(playerCard);
-                AI_Defense = AI_PLAY_DEFENSE(newAIDeckInitial, playerCard);
+                AI_Defense = AI_PLAY_DEFENSE(newAIDeckInitial, playerCard, trumpCard);
                 if (AI_Defense.getValue() == 0) {
                     if (newDeckInitial.isEmpty() != true) {
                         while (newPlayerDeckInitial.size() < 6) {
@@ -111,7 +116,7 @@ class Durak {
                         }
                     }
                     newPlayerDeckInitial.remove(playerCard);
-                    newAIDeckInitial.remove(AI_PLAY_DEFENSE(newAIDeckInitial, playerCard));
+                    newAIDeckInitial.remove(AI_PLAY_DEFENSE(newAIDeckInitial, playerCard, trumpCard));
                     playerTurn = false;
                     Cards[] playerDeckAfterDraw = newPlayerDeckInitial.toArray(new Cards[newPlayerDeckInitial.size()]);
                     System.out.println("Player remaining Cards: " + newPlayerDeckInitial.size());
@@ -145,13 +150,14 @@ class Durak {
                 }
             }
             while (playerTurn == false) {
+                System.out.println("\nTrump card is: "+trumpCardValue+" of " + trumpCard + ".\n");
                 AI_playedCard = AI_PLAY(newAIDeckInitial);
                 System.out.println("\nAI has played: " + AI_playedCard.getValue() + " of " + AI_playedCard.getSuit());
                 newAIDeckInitial.remove(AI_playedCard);
                 System.out.println("\n");
                 playerCard = playerPlay();
                 Cards[] playerDeckAfterPlay = newPlayerDeckInitial.toArray(new Cards[newPlayerDeckInitial.size()]);
-                checkPlay = validPlay(playerCard, AI_playedCard, newPlayerDeckInitial);
+                checkPlay = validPlay(playerCard, AI_playedCard, newPlayerDeckInitial, trumpCard);
                 if (checkPlay == true) {
                     System.out.println("Valid Play!\n");
                     for (int i = 0; i < playerDeckAfterPlay.length; i++)
@@ -165,7 +171,7 @@ class Durak {
                     while (checkPlay == false) {
                         System.out.print("Invalid Play! Try Again, or enter 0 as card value to take.\n");
                         playerCard = playerPlay();
-                        checkPlay = validPlay(playerCard, AI_playedCard, newPlayerDeckInitial);
+                        checkPlay = validPlay(playerCard, AI_playedCard, newPlayerDeckInitial, trumpCard);
                         if (checkPlay == true) {
                             System.out.print("Valid Play!");
                             for (int i = 0; i < playerDeck.length; i++) {
@@ -218,14 +224,22 @@ class Durak {
         shuffleArray(AI_Deck);
         return AI_Deck[0];
     }
-    static Cards AI_PLAY_DEFENSE(List < Cards > newAIDeckInitial, Cards against) {
+    static String determineTrumpCard(List <Cards> deck) {
+        Cards[] newDeck = deck.toArray(new Cards[deck.size()]);
+        return newDeck[newDeck.length-1].getSuit();
+    }
+    static int determineTrumpCardValue(List <Cards> deck) {
+        Cards[] newDeck = deck.toArray(new Cards[deck.size()]);
+        return newDeck[newDeck.length-1].getValue();
+    }
+    static Cards AI_PLAY_DEFENSE(List < Cards > newAIDeckInitial, Cards against, String trumpCard) {
         Cards played = new Cards("", 0);
         Cards[] AI_Deck = newAIDeckInitial.toArray(new Cards[newAIDeckInitial.size()]);
         for (int i = 0; i < AI_Deck.length; i++) {
             if (against.getSuit().equals(AI_Deck[i].getSuit()) && against.getValue() < AI_Deck[i].getValue()) {
                 played = AI_Deck[i];
                 return played;
-            } else if (AI_Deck[i].getSuit().equals("Clubs") && against.getSuit().equals("Clubs") == false) {
+            } else if (AI_Deck[i].getSuit().equals(trumpCard) && against.getSuit().equals(trumpCard) == false) {
                 played = AI_Deck[i];
                 return played;
             }
@@ -244,7 +258,7 @@ class Durak {
         Cards card = new Cards(cardSuit, cardValue);
         return card;
     }
-    static boolean validPlay(Cards played, Cards against, List < Cards > playerDeck) {
+    static boolean validPlay(Cards played, Cards against, List < Cards > playerDeck, String trumpCard) {
         boolean flag = false;
         Cards[] newPlayerDeck = playerDeck.toArray(new Cards[playerDeck.size()]);
         for (int i = 0; i < newPlayerDeck.length; i++) {
@@ -255,7 +269,7 @@ class Durak {
         }
         if (flag == true) {
             if (played.getSuit().equals(against.getSuit()) && played.getValue() > against.getValue()) return true;
-            else if (played.getSuit().equals("Clubs") && (against.getSuit().equals("Clubs")) == false) return true;
+            else if (played.getSuit().equals(trumpCard) && (against.getSuit().equals(trumpCard)) == false) return true;
             else return false;
         } else return false;
     }
